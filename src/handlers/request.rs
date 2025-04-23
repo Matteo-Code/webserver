@@ -1,4 +1,6 @@
 use std::{io::{Read, Write}, net::TcpStream};
+use std::io::BufReader;
+use std::io::prelude::*;
 use crate::handlers::file::{self, FileHandler};
 
 pub fn handle_client(mut stream: TcpStream) {
@@ -35,13 +37,19 @@ pub fn handle_client(mut stream: TcpStream) {
 }
 
 
-fn extract_path(mut stream: &TcpStream) -> String{
-    let mut buffer = [0; 1024];
-    stream.read(&mut buffer).unwrap();
-    let request = String::from_utf8_lossy(&buffer[..]);
+fn extract_path(stream: &TcpStream) -> String {
+    let mut reader = BufReader::new(stream);
+    let mut request_line = String::new();
 
-    let request_line = request.lines().next().unwrap_or("");
-    let path = request_line.split_whitespace().nth(1).unwrap_or("/");
-    println!("Requested path: {}", path);
-    path.to_string()
+    if reader.read_line(&mut request_line).is_ok() {
+        let path = request_line
+            .split_whitespace()
+            .nth(1)
+            .unwrap_or("/")
+            .to_string();
+        println!("Requested path: {}", path);
+        path
+    } else {
+        "/".to_string()
+    }
 }

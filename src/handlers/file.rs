@@ -9,7 +9,7 @@ pub struct TextFileHandler;
 
 impl FileHandler for TextFileHandler {
     fn read(file_path: &str) -> Vec<u8> {
-        let path = file_path.trim_start_matches('/').to_string();
+        let path = "public/".to_owned() + &file_path.trim_start_matches('/').to_string();
         match fs::read_to_string(&path) {
             Ok(content) => content.into_bytes(),
             Err(e) => {
@@ -28,7 +28,7 @@ pub struct PdfFileHandler;
 
 impl FileHandler for PdfFileHandler {
     fn read(file_path: &str) -> Vec<u8> {
-        let path = file_path.trim_start_matches('/').to_string();
+        let path = "public/".to_owned() + &file_path.trim_start_matches('/').to_string();
         match fs::read(&path) {
             Ok(content) => content,
             Err(e) => {
