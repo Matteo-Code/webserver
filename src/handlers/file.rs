@@ -1,27 +1,44 @@
 use std::fs;
 
-pub fn get_raw_file_bytes(file_path:&String) -> Vec<u8>{
-    let mut new_path = file_path.clone();
-    
-    println!("{}",file_path);
-    if new_path.starts_with("/") {
-        new_path.replace_range(..1, "");
-    } 
-    let contents = fs::read(new_path)
-        .expect("Should have been able to read the file");
-
-    contents
+pub trait FileHandler {
+    fn read(file_path: &str) -> Vec<u8>;
+    fn content_type() -> &'static str;
 }
 
-pub fn get_raw_file_contents(file_path:&String) -> String {
-    let mut new_path = file_path.clone();
-    
-    println!("{}",file_path);
-    if new_path.starts_with("/") {
-        new_path.replace_range(..1, "");
-    } 
-    let contents = fs::read_to_string(new_path)
-        .expect("Should have been able to read the file");
+pub struct TextFileHandler;
 
-    contents
+impl FileHandler for TextFileHandler {
+    fn read(file_path: &str) -> Vec<u8> {
+        let path = file_path.trim_start_matches('/').to_string();
+        match fs::read_to_string(&path) {
+            Ok(content) => content.into_bytes(),
+            Err(e) => {
+                eprintln!("Error reading text file: {}", e);
+                Vec::new()
+            }
+        }
+    }
+
+    fn content_type() -> &'static str {
+        "text/plain; charset=utf-8"
+    }
+}
+
+pub struct PdfFileHandler;
+
+impl FileHandler for PdfFileHandler {
+    fn read(file_path: &str) -> Vec<u8> {
+        let path = file_path.trim_start_matches('/').to_string();
+        match fs::read(&path) {
+            Ok(content) => content,
+            Err(e) => {
+                eprintln!("Error reading PDF file: {}", e);
+                Vec::new()
+            }
+        }
+    }
+
+    fn content_type() -> &'static str {
+        "application/pdf"
+    }
 }

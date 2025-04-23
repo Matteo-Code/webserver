@@ -1,23 +1,27 @@
 use std::{io::{Read, Write}, net::TcpStream};
-use crate::handlers::file;
+use crate::handlers::file::{self, FileHandler};
 
 pub fn handle_client(mut stream: TcpStream) {
     println!("New client connected: {}", stream.peer_addr().expect("Could not get info of new client"));
 
     let path = extract_path(&stream);
 
-    let contents;
-    
-    let content_type = find_content_type(&path);
+    let (contents, content_type) = if path.ends_with(".pdf") {
+        (file::PdfFileHandler::read(&path), file::PdfFileHandler::content_type())
+    } else if path.ends_with(".txt") {
+        (file::TextFileHandler::read(&path), file::TextFileHandler::content_type())
+    } else {
+        (file::PdfFileHandler::read(&path), file::PdfFileHandler::content_type())
+    };
 
-
-    if(content_type == "application/pdf"){
-        contents = file::get_raw_file_bytes(&path);
-    }else if(content_type == "text/plain"){
-        contents = file::get_raw_file_contents(&path).into();
-    }else{
-        contents = file::get_raw_file_bytes(&path);
+    if contents.is_empty() {
+        let response = "HTTP/1.1 404 NOT FOUND\r\nContent-Length: 0\r\n\r\n";
+        stream.write_all(response.as_bytes()).unwrap();
+        println!("Failed to read file or file is empty: {}", path);
+        return;
     }
+
+    println!("{}", content_type);
 
     //let body = "Hello, world!";
     let body = contents;
@@ -28,15 +32,6 @@ pub fn handle_client(mut stream: TcpStream) {
     );
     stream.write_all(header.as_bytes()).unwrap();
     stream.write_all(&body).unwrap();
-}
-
-fn find_content_type(file_path: &str) -> &str {
-    match file_path.rsplit('.').next().unwrap_or("") {
-        "pdf" => "application/pdf",
-        "txt" => "text/plain",
-        "html" => "text/html",
-        _ => "application/octet-stream", // fallback for unknown types
-    }
 }
 
 
