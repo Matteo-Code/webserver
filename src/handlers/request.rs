@@ -6,16 +6,37 @@ pub fn handle_client(mut stream: TcpStream) {
 
     let path = extract_path(&stream);
 
-    let contents = file::get_raw_file_contents(path);
+    let contents;
+    
+    let content_type = find_content_type(&path);
+
+
+    if(content_type == "application/pdf"){
+        contents = file::get_raw_file_bytes(&path);
+    }else if(content_type == "text/plain"){
+        contents = file::get_raw_file_contents(&path).into();
+    }else{
+        contents = file::get_raw_file_bytes(&path);
+    }
 
     //let body = "Hello, world!";
     let body = contents;
-    let response = format!(
-        "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nContent-Type: text/plain\r\n\r\n{}",
+    let header = format!(
+        "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nContent-Type: {}\r\n\r\n",
         body.len(),
-        body
+        content_type
     );
-    stream.write_all(response.as_bytes()).unwrap();
+    stream.write_all(header.as_bytes()).unwrap();
+    stream.write_all(&body).unwrap();
+}
+
+fn find_content_type(file_path: &str) -> &str {
+    match file_path.rsplit('.').next().unwrap_or("") {
+        "pdf" => "application/pdf",
+        "txt" => "text/plain",
+        "html" => "text/html",
+        _ => "application/octet-stream", // fallback for unknown types
+    }
 }
 
 
