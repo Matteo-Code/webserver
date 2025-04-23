@@ -1,9 +1,12 @@
-use std::{io::{Read, Write}, net::TcpStream};
+use std::{io::Write, net::TcpStream};
 use std::io::BufReader;
 use std::io::prelude::*;
 use crate::handlers::file::{self, FileHandler};
 
 pub fn handle_client(mut stream: TcpStream) {
+    let webs= vec!["html", "htm"];
+    let styles = vec!["css", "scss"];
+
     println!("New client connected: {}", stream.peer_addr().expect("Could not get info of new client"));
 
     let path = extract_path(&stream);
@@ -12,6 +15,10 @@ pub fn handle_client(mut stream: TcpStream) {
         (file::PdfFileHandler::read(&path), file::PdfFileHandler::content_type())
     } else if path.ends_with(".txt") {
         (file::TextFileHandler::read(&path), file::TextFileHandler::content_type())
+    } else if webs.contains(&path.rsplit(".").next().unwrap_or("")) { 
+        (file::HtmlFileHandler::read(&path), file::HtmlFileHandler::content_type())
+    }else if styles.contains(&path.rsplit(".").next().unwrap_or("")) {
+        (file::CssFileHandler::read(&path), file::CssFileHandler::content_type())
     } else {
         (file::PdfFileHandler::read(&path), file::PdfFileHandler::content_type())
     };

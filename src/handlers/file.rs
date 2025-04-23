@@ -42,3 +42,41 @@ impl FileHandler for PdfFileHandler {
         "application/pdf"
     }
 }
+
+pub struct HtmlFileHandler;
+
+impl FileHandler for HtmlFileHandler {
+     fn read(file_path: &str) -> Vec<u8> {
+        let path = "public/".to_owned() + &file_path.trim_start_matches('/').to_string();
+        match fs::read_to_string(&path) {
+            Ok(content) => content.into_bytes(),
+            Err(e) => {
+                eprintln!("Error reading text file: {}", e);
+                Vec::new()
+            }
+        }
+    }
+
+    fn content_type() -> &'static str {
+        "text/html; charset=utf-8"
+    }
+}
+
+pub struct CssFileHandler;
+
+impl FileHandler for CssFileHandler {
+     fn read(file_path: &str) -> Vec<u8> {
+        let path = "public/".to_owned() + &file_path.trim_start_matches('/').to_string();
+        match fs::read_to_string(&path) {
+            Ok(content) => content.into_bytes(),
+            Err(e) => {
+                eprintln!("Error reading text file: {}", e);
+                Vec::new()
+            }
+        }
+    }
+
+    fn content_type() -> &'static str {
+        "text/css; charset=utf-8"
+    }
+}
