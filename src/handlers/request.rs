@@ -32,7 +32,6 @@ pub fn handle_client(mut stream: TcpStream) {
 
     println!("{}", content_type);
 
-    //let body = "Hello, world!";
     let body = contents;
     let header = format!(
         "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nContent-Type: {}\r\n\r\n",

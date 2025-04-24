@@ -7,5 +7,5 @@ A simple web server written in rust to statically serve files
 - [x] PDF
 - [x] TXT
 - [x] HTML
-- [ ] JS
+- [x] JS
 - [x] CSS
