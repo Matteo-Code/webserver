@@ -4,12 +4,19 @@ use config::tls::load_tls_config;
 use handlers::request;
 use rustls::{ServerConnection, StreamOwned};
 
-use std::{net::TcpListener, sync::Arc};
+use std::{io::{Read, Write}, net::TcpListener, sync::Arc};
 
 
 fn main() -> std::io::Result<()> {
     let config = load_tls_config();
     let listener = TcpListener::bind("127.0.0.1:8080")?;
+
+    match &config {
+        Ok(_) => println!("TLS config loaded, server starting with TLS..."),
+        Err(e) => {
+            println!("Falling back to TCP: {e}");
+        }
+    }
 
     for stream in listener.incoming() {
         let tcp_stream = stream.unwrap();
@@ -25,7 +32,6 @@ fn main() -> std::io::Result<()> {
                 request::handle_client(tcp_stream);
             } 
         }
-        
     }
     Ok(())
 }

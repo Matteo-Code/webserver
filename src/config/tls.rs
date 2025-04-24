@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::BufReader;
 use rustls::pki_types::{CertificateDer as Certificate, PrivateKeyDer as PrivateKey};
 use rustls::server::ServerConfig;
-use rustls_pemfile::{certs, rsa_private_keys};
+use rustls_pemfile::certs;
 
 pub fn load_tls_config() -> Result<ServerConfig, std::io::Error> {
     let cert_file = &mut BufReader::new(File::open("cert.pem")?);
@@ -15,10 +15,10 @@ pub fn load_tls_config() -> Result<ServerConfig, std::io::Error> {
         .map(Certificate::from)
         .collect();
 
-    let keys: Vec<_> = rsa_private_keys(key_file)
-        .collect::<Result<_, _>>()
-        .expect("failed to read private key");
-    let key = PrivateKey::from(keys.into_iter().next().expect("no private key found"));
+    let key = match rustls_pemfile::private_key(key_file)? {
+        Some(key) => PrivateKey::from(key),
+        None => return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "no private key found")),
+    };
 
     Ok(ServerConfig::builder()
         .with_no_client_auth()
